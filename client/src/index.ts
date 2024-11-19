@@ -1,5 +1,3 @@
-import Phaser from "phaser";
-
 import { Part4Scene } from "./scenes/Part4Scene";
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -11,9 +9,8 @@ const config: Phaser.Types.Core.GameConfig = {
     },
     width: 800,
     height: 600,
-    // height: 200,
     backgroundColor: '#000000',
-    parent: 'phaser-example',
+    parent: 'gameContainer', // Match the div ID in the HTML
     physics: {
         default: 'arcade',
         arcade: {
@@ -26,4 +23,3 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 const game = new Phaser.Game(config);
-

@@ -2,14 +2,18 @@ import Phaser from "phaser";
 import { Room, Client } from "colyseus.js";
 import { GameState, Player } from "../../../server/src/rooms/Part4State";
 
+interface FloatingText {
+    text: Phaser.GameObjects.Text;
+    startTime: number;
+    duration: number;
+}
+
 export class Part4Scene extends Phaser.Scene {
     private room!: Room;
     private player!: Phaser.GameObjects.Triangle;
     private playerEntities: { [sessionId: string]: Phaser.GameObjects.Triangle } = {};
     private bullets: { [bulletId: string]: Phaser.GameObjects.Rectangle } = {};
     private powerUps: { [powerUpId: string]: Phaser.GameObjects.Rectangle } = {};
-    private healthText!: Phaser.GameObjects.Text;
-    private killsText!: Phaser.GameObjects.Text;
     private starfield!: Phaser.GameObjects.TileSprite;
     private keys!: { [key: string]: Phaser.Input.Keyboard.Key };
     private currentTick: number = 0;
@@ -19,6 +23,13 @@ export class Part4Scene extends Phaser.Scene {
     private shootSound!: Phaser.Sound.BaseSound;
     private powerupSound!: Phaser.Sound.BaseSound;
     private explosionSound!: Phaser.Sound.BaseSound;
+    private floatingTexts: FloatingText[] = [];
+    private healthBars: { [sessionId: string]: Phaser.GameObjects.Graphics } = {};
+    private leaderboardContainer!: Phaser.GameObjects.Container;
+    private leaderboardText!: Phaser.GameObjects.Text;
+    private isLeaderboardVisible: boolean = false;
+
+
 
     constructor() {
         super({ key: "GameScene" });
@@ -66,6 +77,66 @@ export class Part4Scene extends Phaser.Scene {
         texture.refresh();
     }
 
+    setupPowerUpNotifications() {
+        this.room.onMessage("powerUpCollected", (data) => {
+            const { playerId, type, value, x, y } = data;
+            if (playerId === this.room.sessionId) {
+                this.powerupSound.play({
+                    detune: Phaser.Math.Between(-50, 50),
+                    rate: Phaser.Math.FloatBetween(0.98, 1.02)
+                });
+
+                let message = '';
+                switch (type) {
+                    case 'health': message = `+${value} Health`; break;
+                    case 'firerate': message = 'Fire Rate Increased!'; break;
+                    case 'speed': message = 'Speed Boost!'; break;
+                }
+
+                this.showFloatingText(message, x, y);
+            }
+        });
+    }
+
+    showFloatingText(message: string, x: number, y: number) {
+        const text = this.add.text(
+            x,
+            y,
+            message,
+            {
+                fontSize: '12px',
+                color: '#00ff00',
+                stroke: '#000000',
+                strokeThickness: 4
+            }
+        ).setOrigin(0.5, 0.5)
+            .setDepth(2);
+
+        this.worldContainer.add(text);  // Add to world container
+
+        this.floatingTexts.push({
+            text,
+            startTime: this.time.now,
+            duration: 2000
+        });
+    }
+
+    updateFloatingTexts() {
+        const currentTime = this.time.now;
+        this.floatingTexts = this.floatingTexts.filter(({ text, startTime, duration }) => {
+            const elapsed = currentTime - startTime;
+            if (elapsed >= duration) {
+                text.destroy();
+                return false;
+            }
+
+            const alpha = 1 - (elapsed / duration);
+            text.setAlpha(alpha);
+
+            return true;
+        });
+    }
+
     async create() {
         this.music = this.sound.add('background-music', {
             volume: 0.2,       // 50% volume
@@ -111,16 +182,27 @@ export class Part4Scene extends Phaser.Scene {
         // Connect to server
         await this.connect();
 
-        // Setup UI
-        this.healthText = this.add.text(10, 10, 'Health: 100', {
+        this.leaderboardContainer = this.add.container(10, 10).setVisible(false).setDepth(10);
+        this.leaderboardText = this.add.text(0, 0, '', {
+            fontSize: '16px',
             color: '#ffffff',
-            fontSize: '20px'
-        }).setScrollFactor(0).setDepth(1);
+            backgroundColor: '#000000',
+            padding: { left: 5, right: 5, top: 5, bottom: 5 },
+            align: 'left',
+        }).setOrigin(0);
+        this.leaderboardContainer.add(this.leaderboardText);
 
-        this.killsText = this.add.text(10, 40, 'Kills: 0', {
-            color: '#ffffff',
-            fontSize: '20px'
-        }).setScrollFactor(0).setDepth(1);
+        // Listen for Tab key
+        this.input.keyboard.on('keydown-TAB', (event: KeyboardEvent) => {
+            event.preventDefault(); // Prevent the browser's default Tab behavior
+            this.showLeaderboard();
+        });
+
+        this.input.keyboard.on('keyup-TAB', (event: KeyboardEvent) => {
+            event.preventDefault(); // Prevent the browser's default Tab behavior
+            this.hideLeaderboard();
+        });
+
 
         // Listen for game over
         this.room.onMessage("gameOver", (data) => {
@@ -135,15 +217,7 @@ export class Part4Scene extends Phaser.Scene {
             });
         });
 
-        this.room.onMessage("powerUpCollected", (data) => {
-            const { playerId } = data;
-            if (playerId === this.room.sessionId) {
-                this.powerupSound.play({
-                    detune: Phaser.Math.Between(-50, 50),
-                    rate: Phaser.Math.FloatBetween(0.98, 1.02)
-                });
-            }
-        });
+        this.setupPowerUpNotifications();
 
         this.particleManagers['bulletImpact'] = this.add.particles(0, 0, 'particle', {
             speed: { min: 50, max: 150 },
@@ -174,6 +248,34 @@ export class Part4Scene extends Phaser.Scene {
         }
     }
 
+    showLeaderboard() {
+        this.isLeaderboardVisible = true;
+        this.updateLeaderboard();
+        this.leaderboardContainer.setVisible(true);
+    }
+
+    hideLeaderboard() {
+        this.isLeaderboardVisible = false;
+        this.leaderboardContainer.setVisible(false);
+    }
+
+    updateLeaderboard() {
+        if (!this.isLeaderboardVisible) return;
+
+        const players = Array.from(this.room.state.players.values());
+        players.sort((a: Player, b: Player) => b.kills - a.kills); // Sort players by kills (highest first)
+
+        let leaderboardText = 'LEADERBOARD\n';
+        leaderboardText += '-----------------\n';
+
+        players.forEach((player: Player, index) => {
+            const rank = index + 1;
+            leaderboardText += `${rank}. ${player.sessionId}${player.sessionId === this.room.sessionId ? "(YOU)" : ""} - Kills: ${player.kills}\n`;
+        });
+
+        this.leaderboardText.setText(leaderboardText);
+    }
+
     setupRoomHandlers() {
 
         const colorToHex = (color: string): number => {
@@ -195,7 +297,12 @@ export class Part4Scene extends Phaser.Scene {
             // Set origin to center for proper rotation
             triangle.setOrigin(0.1, 0.5);
 
+            // Create a health bar for the player
+            const healthBar = this.add.graphics();
+            this.healthBars[sessionId] = healthBar;
+
             this.worldContainer.add(triangle);
+            this.worldContainer.add(healthBar);
             this.playerEntities[sessionId] = triangle;
 
             if (sessionId === this.room.sessionId) {
@@ -215,12 +322,26 @@ export class Part4Scene extends Phaser.Scene {
             player.onChange(() => {
                 const entity = this.playerEntities[sessionId];
                 if (entity && entity.active) {
+                    entity.setPosition(player.x, player.y);
+                    this.updateHealthBar(sessionId, player);
                     if (sessionId === this.room.sessionId) {
-                        this.healthText.setText(`Health: ${player.health}`);
-                        this.killsText.setText(`Kills: ${player.kills}`);
                         entity.setPosition(player.x, player.y);
-                        // Convert server rotation to radians for Phaser
-                        entity.setRotation(player.rotation);
+
+                        // Smoothly interpolate rotation
+                        let targetRotation = player.rotation;
+                        let currentRotation = entity.rotation;
+
+                        // Normalize both rotations to be between 0 and 2π
+                        targetRotation = (targetRotation + Math.PI * 2) % (Math.PI * 2);
+                        currentRotation = (currentRotation + Math.PI * 2) % (Math.PI * 2);
+
+                        // Choose the shortest rotation path
+                        let diff = targetRotation - currentRotation;
+                        if (diff > Math.PI) diff -= Math.PI * 2;
+                        if (diff < -Math.PI) diff += Math.PI * 2;
+
+                        entity.setRotation(currentRotation + diff * 0.5);
+
                         this.worldContainer.setPosition(
                             this.cameras.main.centerX - player.x,
                             this.cameras.main.centerY - player.y
@@ -239,6 +360,12 @@ export class Part4Scene extends Phaser.Scene {
             if (entity) {
                 entity.destroy();
                 delete this.playerEntities[sessionId];
+            }
+
+            const healthBar = this.healthBars[sessionId];
+            if (healthBar) {
+                healthBar.destroy();
+                delete this.healthBars[sessionId];
             }
         });
 
@@ -303,6 +430,35 @@ export class Part4Scene extends Phaser.Scene {
         });
     }
 
+    updateHealthBar(sessionId: string, player: Player) {
+        const healthBar = this.healthBars[sessionId];
+        if (!healthBar) return;
+
+        const entity = this.playerEntities[sessionId];
+        if (!entity) return;
+
+        const barWidth = 40;
+        const barHeight = 5;
+
+        const healthRatio = Math.max(player.health / 100, 0);
+
+        healthBar.clear();
+
+        // Draw background (damage taken)
+        healthBar.fillStyle(0xff0000);
+        healthBar.fillRect((entity.x - 2) - barWidth / 2, entity.y - 25, barWidth, barHeight);
+
+        // Draw foreground (current health)
+        healthBar.fillStyle(0x00ff00);
+        healthBar.fillRect((entity.x - 2) - barWidth / 2, entity.y - 25, barWidth * healthRatio, barHeight);
+
+        if (player.health >= 100) {
+            healthBar.setVisible(false);
+        } else {
+            healthBar.setVisible(true);
+        }
+    }
+
     addBulletImpact(x: number, y: number) {
         const particles = this.particleManagers['bulletImpact'];
 
@@ -320,6 +476,7 @@ export class Part4Scene extends Phaser.Scene {
         if (!this.room || !this.player) return;
 
         this.currentTick++;
+        this.updateFloatingTexts();
 
         const input = {
             left: this.keys.left.isDown,
@@ -340,7 +497,19 @@ export class Part4Scene extends Phaser.Scene {
                     const { serverX, serverY, serverRotation } = entity.data.values;
                     entity.x = Phaser.Math.Linear(entity.x, serverX, 0.2);
                     entity.y = Phaser.Math.Linear(entity.y, serverY, 0.2);
-                    entity.rotation = Phaser.Math.Linear(entity.rotation, serverRotation, 0.2);
+
+                    this.updateHealthBar(sessionId, player);
+
+                    // Normalize rotations
+                    let currentRotation = (entity.rotation + Math.PI * 2) % (Math.PI * 2);
+                    let targetRotation = (serverRotation + Math.PI * 2) % (Math.PI * 2);
+
+                    // Choose shortest rotation path
+                    let diff = targetRotation - currentRotation;
+                    if (diff > Math.PI) diff -= Math.PI * 2;
+                    if (diff < -Math.PI) diff += Math.PI * 2;
+
+                    entity.setRotation(currentRotation + diff * 0.2);
                 }
             }
         });

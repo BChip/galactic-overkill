@@ -5,39 +5,145 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Intergalatic Overkill</title>
-    <style>* {
-  margin: 0;
-  padding: 0;
+    <title>Galactic Overkill</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body {
+  background-color: #000;
+  background-image: radial-gradient(circle at 100% 0, #79449a21, #0000), radial-gradient(circle at 20% 80%, #29c4ff21, #0000);
+  width: 100%;
+  height: 100vh;
 }
 
-html, body {
-  font-family: Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif;
-}
-
-a {
-  color: red;
-}
-
-input {
-  outline: none;
-}
-
-div.menu {
-  padding: 1em;
-}
-
-div.menu > div {
-  margin-bottom: .1em;
+canvas#starfield {
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  position: fixed;
 }
 </style>
 </head>
 
-<body>
+<body class="bg-black text-gray-100 font-sans h-screen flex flex-col overflow-hidden">
 
+    <!-- Dynamic Background -->
+    <canvas id="starfield"></canvas>
+
+    <!-- Header -->
+    <header class="bg-gray-900 bg-opacity-80 p-4 shadow-md border-b border-gray-700 flex justify-between items-center">
+        <h1 class="text-4xl font-extrabold text-blue-500 tracking-wide uppercase glow">
+            Galactic Overkill
+        </h1>
+        <button id="controlsButton" class="bg-red-600 hover:bg-red-500 text-white text-sm px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-red-400">
+            View Controls
+        </button>
+    </header>
+
+    <!-- Ad Space (Hero) -->
+    <div class="bg-gray-900 bg-opacity-80 text-center py-4 border-b border-gray-700">
+        <span class="text-lg text-gray-400 uppercase tracking-wider">Ad Space Placeholder: 970x250 Hero Banner</span>
+    </div>
+
+    <!-- Game Canvas Area -->
+    <main class="flex-grow flex items-center justify-center relative">
+        <div id="gameContainer" class="w-full max-w-4xl p-4">
+            <!-- The canvas will dynamically attach here -->
+        </div>
+
+        <!-- Ad Space (Side Left) -->
+        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-900 bg-opacity-80 w-40 h-96 flex items-center justify-center border border-gray-700 rounded-lg shadow-md">
+            <span class="text-xs text-gray-400 text-center">Ad Space Placeholder: 160x600 Vertical</span>
+        </div>
+
+        <!-- Ad Space (Side Right) -->
+        <div class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-900 bg-opacity-80 w-40 h-96 flex items-center justify-center border border-gray-700 rounded-lg shadow-md">
+            <span class="text-xs text-gray-400 text-center">Ad Space Placeholder: 160x600 Vertical</span>
+        </div>
+    </main>
+
+    <!-- Controls Modal -->
+    <div id="controlsModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center hidden">
+        <div class="bg-gray-900 p-6 rounded-lg shadow-lg w-96 border border-gray-700">
+            <h2 class="text-2xl font-bold text-blue-500 mb-4">Game Controls</h2>
+            <ul class="space-y-3 text-gray-300">
+                <li><span class="font-semibold text-blue-400">W:</span> Move Up</li>
+                <li><span class="font-semibold text-blue-400">A:</span> Move Left</li>
+                <li><span class="font-semibold text-blue-400">S:</span> Move Down</li>
+                <li><span class="font-semibold text-blue-400">D:</span> Move Right</li>
+                <li><span class="font-semibold text-blue-400">Space:</span> Shoot</li>
+                <li><span class="font-semibold text-blue-400">Tab:</span> Show Leaderboard</li>
+            </ul>
+            <button id="closeModalButton" class="mt-4 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-red-400">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- Ad Space (Footer) -->
+    <footer class="bg-gray-900 bg-opacity-80 text-center py-4 border-t border-gray-700">
+        <span class="text-lg text-gray-400 uppercase tracking-wider">Ad Space Placeholder: 728x90 Footer Banner</span>
+    </footer>
+
+    <!-- Scripts -->
+    <script>const controlsButton = document.getElementById("controlsButton");
+const closeModalButton = document.getElementById("closeModalButton");
+const controlsModal = document.getElementById("controlsModal");
+controlsButton.addEventListener("click", ()=>{
+    controlsModal.classList.remove("hidden");
+});
+closeModalButton.addEventListener("click", ()=>{
+    controlsModal.classList.add("hidden");
+});
+// Starfield Script
+const canvas = document.getElementById("starfield");
+const context = canvas.getContext("2d");
+let width, height, centerX, centerY, stars = [];
+const STAR_COUNT = 3000; // Number of stars
+const STAR_SPEED = 2; // Speed of star movement
+function resizeCanvas() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+    centerX = width / 2;
+    centerY = height / 2;
+    // Initialize stars with random positions and depth
+    stars = Array.from({
+        length: STAR_COUNT
+    }).map(()=>({
+            x: (Math.random() - 0.5) * width,
+            y: (Math.random() - 0.5) * height,
+            z: Math.random() * width
+        }));
+}
+function drawStars() {
+    context.clearRect(0, 0, width, height);
+    for (const star of stars){
+        const k = width / star.z;
+        const px = star.x * k + centerX;
+        const py = star.y * k + centerY;
+        if (px >= 0 && px <= width && py >= 0 && py <= height) {
+            const size = (1 - star.z / width) * 3; // Star size based on depth
+            context.fillStyle = "#fff";
+            context.beginPath();
+            context.arc(px, py, size, 0, Math.PI * 2);
+            context.fill();
+        }
+        // Move the star closer to the screen
+        star.z -= STAR_SPEED;
+        // Reset the star if it moves out of view
+        if (star.z <= 0) {
+            star.z = width;
+            star.x = (Math.random() - 0.5) * width;
+            star.y = (Math.random() - 0.5) * height;
+        }
+    }
+    requestAnimationFrame(drawStars);
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+drawStars();
+
+</script>
 
     <script src="/index.b71e74eb.js" defer=""></script>
-
 </body>
 
 </html>

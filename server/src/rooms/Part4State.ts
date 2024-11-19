@@ -12,7 +12,7 @@ export interface InputData {
 export class PowerUp extends Schema {
   @type("number") x: number;
   @type("number") y: number;
-  @type("string") type: "health" | "firerate" | "speed" | "ammo";
+  @type("string") type: "health" | "firerate" | "speed";
   @type("number") value: number;
   @type("string") ownerId: string = "";
 }

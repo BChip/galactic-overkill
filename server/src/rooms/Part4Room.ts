@@ -39,13 +39,13 @@ export class Part4Room extends Room<GameState> {
   }
 
   spawnInitialPowerUps() {
-    const types: Array<"health" | "firerate" | "speed" | "ammo"> = ["health", "firerate", "speed", "ammo"];
+    const types: Array<"health" | "firerate" | "speed"> = ["health", "firerate", "speed"];
     for (let i = 0; i < 20; i++) {
       this.spawnPowerUp(types[Math.floor(Math.random() * types.length)]);
     }
   }
 
-  spawnPowerUp(type: "health" | "firerate" | "speed" | "ammo") {
+  spawnPowerUp(type: "health" | "firerate" | "speed") {
     const powerUp = new PowerUp();
     powerUp.x = Math.random() * this.state.mapWidth;
     powerUp.y = Math.random() * this.state.mapHeight;
@@ -55,7 +55,6 @@ export class Part4Room extends Room<GameState> {
       case "health": powerUp.value = 50; break;
       case "firerate": powerUp.value = 0.2; break;
       case "speed": powerUp.value = 1; break;
-      case "ammo": powerUp.value = 10; break;
     }
 
     this.state.powerUps.set(Math.random().toString(), powerUp);
@@ -69,27 +68,37 @@ export class Part4Room extends Room<GameState> {
     });
 
     // Update bullets
+    const bulletsToRemove = new Set<string>();
+
     this.state.bullets.forEach((bullet, bulletId) => {
       bullet.x += bullet.velocityX;
       bullet.y += bullet.velocityY;
 
+      // Check for out of bounds
+      if (bullet.x < 0 || bullet.x > this.state.mapWidth ||
+        bullet.y < 0 || bullet.y > this.state.mapHeight) {
+        bulletsToRemove.add(bulletId);
+        return;
+      }
+
       // Check bullet collisions
+      let bulletHit = false;
       this.state.players.forEach((player, playerId) => {
-        if (bullet.ownerId !== playerId && this.checkCollision(bullet, player)) {
+        if (!bulletHit && bullet.ownerId !== playerId && this.checkCollision(bullet, player)) {
           player.health -= 25;
-          this.state.bullets.delete(bulletId);
+          bulletHit = true;
+          bulletsToRemove.add(bulletId);
 
           if (player.health <= 0) {
             this.handlePlayerDeath(player, playerId, bullet.ownerId);
           }
         }
       });
+    });
 
-      // Remove bullets that are out of bounds
-      if (bullet.x < 0 || bullet.x > this.state.mapWidth ||
-        bullet.y < 0 || bullet.y > this.state.mapHeight) {
-        this.state.bullets.delete(bulletId);
-      }
+    // Remove all bullets marked for deletion
+    bulletsToRemove.forEach(bulletId => {
+      this.state.bullets.delete(bulletId);
     });
   }
 
@@ -98,12 +107,12 @@ export class Part4Room extends Room<GameState> {
       const input = player.inputQueue.shift();
       if (!input) continue;
 
-      // Rotation
+      // Normalize rotation between 0 and 2π
       if (input.left) {
-        player.rotation -= this.ROTATION_SPEED;
+        player.rotation = (player.rotation - this.ROTATION_SPEED + Math.PI * 2) % (Math.PI * 2);
       }
       if (input.right) {
-        player.rotation += this.ROTATION_SPEED;
+        player.rotation = (player.rotation + this.ROTATION_SPEED) % (Math.PI * 2);
       }
 
       // Thrust
@@ -186,7 +195,13 @@ export class Part4Room extends Room<GameState> {
   checkPowerUpCollisions(player: Player, playerId: string) {
     this.state.powerUps.forEach((powerUp, powerUpId) => {
       if (this.checkCollision(player, powerUp)) {
-        this.broadcast("powerUpCollected", { playerId });
+        this.broadcast("powerUpCollected", {
+          playerId,
+          type: powerUp.type,
+          value: powerUp.value,
+          x: powerUp.x,
+          y: powerUp.y
+        });
         this.applyPowerUp(player, powerUp);
         this.state.powerUps.delete(powerUpId);
         this.spawnPowerUp(powerUp.type);
@@ -215,7 +230,7 @@ export class Part4Room extends Room<GameState> {
       const powerUp = new PowerUp();
       powerUp.x = player.x + (Math.random() * 50 - 25);
       powerUp.y = player.y + (Math.random() * 50 - 25);
-      powerUp.type = ["health", "firerate", "speed", "ammo"][Math.floor(Math.random() * 4)] as any;
+      powerUp.type = ["health", "firerate", "speed"][Math.floor(Math.random() * 4)] as any;
       this.state.powerUps.set(Math.random().toString(), powerUp);
     }
 
@@ -231,7 +246,6 @@ export class Part4Room extends Room<GameState> {
 
     // Reset dead player
     player.health = 100;
-    player.kills = 0;
     player.fireRate = 1;
     player.speed = 5;
     player.x = Math.random() * this.state.mapWidth;
@@ -242,7 +256,7 @@ export class Part4Room extends Room<GameState> {
     const distance = Math.sqrt(
       Math.pow(obj1.x - obj2.x, 2) + Math.pow(obj1.y - obj2.y, 2)
     );
-    return distance < 30; // Collision radius
+    return distance < 15; // Collision radius
   }
 
   onJoin(client: Client) {
