@@ -161,7 +161,8 @@ export class Part4Scene extends Phaser.Scene {
     }
 
     async connect() {
-        const client = new Client("ws://localhost:2567");
+        const url = process.env.WS_URL;
+        const client = new Client(url);
         try {
             this.room = await client.joinOrCreate<GameState>("game");
             this.setupRoomHandlers();
