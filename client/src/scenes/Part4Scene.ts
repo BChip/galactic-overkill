@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { Room, Client } from "colyseus.js";
 import { GameState, Player } from "../../../server/src/rooms/Part4State";
+import { StarfieldConfig, StarfieldManager } from "../managers/starfieldmanager";
 
 interface FloatingText {
     text: Phaser.GameObjects.Text;
@@ -14,7 +15,7 @@ export class Part4Scene extends Phaser.Scene {
     private playerEntities: { [sessionId: string]: Phaser.GameObjects.Triangle } = {};
     private bullets: { [bulletId: string]: Phaser.GameObjects.Rectangle } = {};
     private powerUps: { [powerUpId: string]: Phaser.GameObjects.Rectangle } = {};
-    private starfield!: Phaser.GameObjects.TileSprite;
+    private starfieldManager!: StarfieldManager;
     private keys!: { [key: string]: Phaser.Input.Keyboard.Key };
     private currentTick: number = 0;
     private worldContainer!: Phaser.GameObjects.Container;
@@ -36,7 +37,6 @@ export class Part4Scene extends Phaser.Scene {
     }
 
     preload() {
-        this.createStarfieldTexture();
         this.createBulletHitTexture();
         this.load.audio('background-music', 'assets/music.ogg');
         this.load.audio('shoot-sound', 'assets/shoot.ogg');
@@ -51,30 +51,6 @@ export class Part4Scene extends Phaser.Scene {
         graphics.fillRect(0, 0, 4, 4);
         graphics.generateTexture('particle', 4, 4);
         graphics.destroy();
-    }
-
-    createStarfieldTexture() {
-        const graphics = this.add.graphics();
-        const texture = this.textures.createCanvas('starfield', 256, 256);
-        const canvas = texture.getCanvas();
-        const ctx = canvas.getContext('2d');
-
-        if (ctx) {
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, 256, 256);
-
-            for (let i = 0; i < 100; i++) {
-                const x = Math.random() * 256;
-                const y = Math.random() * 256;
-                const radius = Math.random() * 1.5;
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.8 + 0.2})`;
-                ctx.fill();
-            }
-        }
-
-        texture.refresh();
     }
 
     setupPowerUpNotifications() {
@@ -166,9 +142,8 @@ export class Part4Scene extends Phaser.Scene {
         this.worldContainer = this.add.container(0, 0);
 
         // Create starfield background
-        this.starfield = this.add.tileSprite(0, 0, 2000, 2000, 'starfield')
-            .setOrigin(0);
-        this.worldContainer.add(this.starfield);
+        this.starfieldManager = new StarfieldManager(this, 2000, 2000);
+        this.starfieldManager.getLayers().forEach(layer => this.worldContainer.add(layer));
 
         // Setup input
         this.keys = this.input.keyboard.addKeys({
@@ -488,6 +463,12 @@ export class Part4Scene extends Phaser.Scene {
         };
 
         this.room.send(0, input);
+
+        const velocity = {
+            x: (this.keys.left.isDown ? -1 : 0) + (this.keys.right.isDown ? 1 : 0),
+            y: (this.keys.up.isDown ? -1 : 0) + (this.keys.down.isDown ? 1 : 0)
+        };
+        this.starfieldManager.update(velocity.x, velocity.y);
 
         // Interpolate other players
         this.room.state.players.forEach((player, sessionId) => {
