@@ -32,6 +32,7 @@ export class MainScene extends Phaser.Scene {
     private username: string;
     private forwardThrusterManager!: Phaser.GameObjects.Particles.ParticleEmitterManager;
     private playerPrevPositions: { [sessionId: string]: { x: number, y: number } } = {};
+    private powerUpGlows: { [powerUpId: string]: Phaser.GameObjects.Particles.ParticleEmitterManager } = {};
 
     constructor() {
         super({ key: "MainScene" });
@@ -44,6 +45,95 @@ export class MainScene extends Phaser.Scene {
 
     preload() {
 
+    }
+
+    // Enhanced power-up glow implementation
+    addGlowToPowerUp(powerUpId: string, powerUp: any, rect: Phaser.GameObjects.Rectangle) {
+        // Define colors for different power-up types with more vibrant colors
+        const glowColors = {
+            health: 0xff3333,      // Brighter red for health
+            firerate: 0x33ff33,    // Brighter green for fire rate
+            speed: 0x3333ff,       // Brighter blue for speed
+            ammo: 0xffff33         // Brighter yellow for ammo
+        };
+
+        // Create a more visible glow effect
+        const glowEmitter = this.add.particles(powerUp.x, powerUp.y, 'particle', {
+            speed: { min: 5, max: 15 },        // Slight outward drift
+            scale: { start: 3.0, end: 1.0 },   // Larger particles
+            alpha: { start: 0.7, end: 0 },     // Higher starting alpha
+            lifespan: 1000,                    // Shorter lifespan for more activity
+            blendMode: 'ADD',                  // ADD blend mode for glow
+            tint: glowColors[powerUp.type],
+            gravityY: 0,
+            quantity: 2,                       // Emit two particles at once
+            frequency: 100                     // Emit more frequently
+        });
+
+        // Add emitter to world container and ensure it's behind the power-up
+        this.worldContainer.add(glowEmitter);
+        // Make sure the power-up is on top
+        this.worldContainer.bringToTop(rect);
+
+        // Store reference to emitter
+        this.powerUpGlows[powerUpId] = glowEmitter;
+
+        // Create a more active emission pattern
+        this.time.addEvent({
+            delay: 50,  // Update more frequently (50ms)
+            loop: true,
+            callback: () => {
+                // Check if the power-up and emitter still exist
+                if (this.powerUps[powerUpId] && glowEmitter) {
+                    // Create a circular pattern of particles around the power-up
+                    // This makes the glow effect more visible
+                    const angle = Phaser.Math.Between(0, 360) * (Math.PI / 180);
+                    const distance = Phaser.Math.Between(0, 10);
+                    const offsetX = Math.cos(angle) * distance;
+                    const offsetY = Math.sin(angle) * distance;
+
+                    glowEmitter.emitParticleAt(offsetX, offsetY, 1);
+                } else {
+                    return false;  // Stops the timer
+                }
+            }
+        });
+
+        // Add a more pronounced pulsating effect
+        this.tweens.add({
+            targets: rect,
+            scaleX: 1.3,
+            scaleY: 1.3,
+            duration: 600,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        // Add a secondary glow effect using a circular sprite
+        // This creates a more persistent visible glow under the power-up
+        const glowCircle = this.add.circle(0, 0, 15, glowColors[powerUp.type], 0.3);
+        glowCircle.setBlendMode(Phaser.BlendModes.ADD);
+
+        // Add the circle to the world container, ensuring it's behind the power-up
+        this.worldContainer.add(glowCircle);
+        this.worldContainer.sendToBack(glowCircle);
+
+        // Make the glow circle follow the power-up
+        this.time.addEvent({
+            delay: 16,  // Update every frame
+            loop: true,
+            callback: () => {
+                if (this.powerUps[powerUpId]) {
+                    glowCircle.setPosition(this.powerUps[powerUpId].x, this.powerUps[powerUpId].y);
+                } else {
+                    glowCircle.destroy();
+                    return false;
+                }
+            }
+        });
+
+        return glowEmitter;
     }
 
     createThrusterEffect() {
@@ -476,9 +566,17 @@ export class MainScene extends Phaser.Scene {
                 speed: 0x0000ff,
                 ammo: 0xffff00
             };
-            const rect = this.add.rectangle(powerUp.x, powerUp.y, 15, 15, colors[powerUp.type]);
+
+            // Create the power-up rectangle
+            const rect = this.add.rectangle(powerUp.x, powerUp.y, 15, 15);
+            rect.setOrigin(0.5, 0.5);  // Set origin to center for scaling
+
+            // Add to world container
             this.worldContainer.add(rect);
             this.powerUps[powerUpId] = rect;
+
+            // Add glow effect
+            this.addGlowToPowerUp(powerUpId, powerUp, rect);
         });
 
         this.room.state.powerUps.onRemove((powerUp, powerUpId) => {
@@ -486,6 +584,13 @@ export class MainScene extends Phaser.Scene {
             if (entity) {
                 entity.destroy();
                 delete this.powerUps[powerUpId];
+            }
+
+            // Clean up the glow emitter
+            const glowEmitter = this.powerUpGlows[powerUpId];
+            if (glowEmitter) {
+                glowEmitter.destroy();
+                delete this.powerUpGlows[powerUpId];
             }
         });
 
