@@ -54,7 +54,6 @@ export class MainScene extends Phaser.Scene {
             health: 0xff3333,      // Brighter red for health
             firerate: 0x33ff33,    // Brighter green for fire rate
             speed: 0x3333ff,       // Brighter blue for speed
-            ammo: 0xffff33         // Brighter yellow for ammo
         };
 
         // Create a more visible glow effect
@@ -66,7 +65,7 @@ export class MainScene extends Phaser.Scene {
             blendMode: 'ADD',                  // ADD blend mode for glow
             tint: glowColors[powerUp.type],
             gravityY: 0,
-            quantity: 2,                       // Emit two particles at once
+            quantity: 1,                       // Emit two particles at once
             frequency: 100                     // Emit more frequently
         });
 
@@ -92,7 +91,7 @@ export class MainScene extends Phaser.Scene {
                     const offsetX = Math.cos(angle) * distance;
                     const offsetY = Math.sin(angle) * distance;
 
-                    glowEmitter.emitParticleAt(offsetX, offsetY, 1);
+                    glowEmitter.emitParticleAt(offsetX, offsetY, 2);
                 } else {
                     return false;  // Stops the timer
                 }

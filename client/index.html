@@ -59,34 +59,35 @@
             }
         }
 
-        .neon-button {
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s ease;
+        .power-up-key {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
         }
 
-        .neon-button:before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: all 0.6s ease;
+        .power-up-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
         }
 
-        .neon-button:hover:before {
-            left: 100%;
+        .power-up-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        .neon-button:hover {
-            transform: scale(1.05);
+        .controls-key {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
         }
 
-        .neon-button:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(66, 220, 255, 0.5);
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
         }
     </style>
 </head>
@@ -102,11 +103,49 @@
         <h1 class="orbitron text-4xl font-extrabold text-blue-500 tracking-wide uppercase glow pulse-glow">
             Galactic Overkill
         </h1>
-        <button id="controlsButton"
-            class="neon-button bg-gradient-to-r from-red-600 to-pink-600 text-white text-sm px-4 py-2 rounded shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400"
-            aria-label="View game controls">
-            View Controls
-        </button>
+        <div class="flex items-center gap-6 text-sm text-gray-300">
+            <div class="power-up-key">
+                <div class="power-up-item">
+                    <div class="power-up-dot" style="background-color: #ff3333;"></div>
+                    <span>Health</span>
+                </div>
+                <div class="power-up-item">
+                    <div class="power-up-dot" style="background-color: #33ff33;"></div>
+                    <span>Fire Rate</span>
+                </div>
+                <div class="power-up-item">
+                    <div class="power-up-dot" style="background-color: #ff8800;"></div>
+                    <span>Speed</span>
+                </div>
+            </div>
+            <div class="controls-key">
+                <span class="font-semibold text-blue-400">Game Controls:</span>
+                <div class="control-item">
+                    <span class="font-semibold text-blue-400">W:</span>
+                    <span>Up</span>
+                </div>
+                <div class="control-item">
+                    <span class="font-semibold text-blue-400">A:</span>
+                    <span>Left</span>
+                </div>
+                <div class="control-item">
+                    <span class="font-semibold text-blue-400">S:</span>
+                    <span>Down</span>
+                </div>
+                <div class="control-item">
+                    <span class="font-semibold text-blue-400">D:</span>
+                    <span>Right</span>
+                </div>
+                <div class="control-item">
+                    <span class="font-semibold text-blue-400">Space:</span>
+                    <span>Shoot</span>
+                </div>
+                <div class="control-item">
+                    <span class="font-semibold text-blue-400">Tab:</span>
+                    <span>Leaderboard</span>
+                </div>
+            </div>
+        </div>
     </header>
 
     <!-- Top Ad Space -->
@@ -133,27 +172,6 @@
         </div>
     </main>
 
-    <!-- Controls Modal -->
-    <div id="controlsModal"
-        class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center opacity-0 invisible transition-opacity duration-300">
-        <div class="bg-gray-900 p-6 rounded-lg shadow-lg w-96 border border-indigo-700">
-            <h2 class="text-2xl font-bold text-blue-500 mb-4 orbitron">Game Controls</h2>
-            <ul class="space-y-3 text-gray-300">
-                <li><span class="font-semibold text-blue-400">W:</span> Move Up</li>
-                <li><span class="font-semibold text-blue-400">A:</span> Move Left</li>
-                <li><span class="font-semibold text-blue-400">S:</span> Move Down</li>
-                <li><span class="font-semibold text-blue-400">D:</span> Move Right</li>
-                <li><span class="font-semibold text-blue-400">Space:</span> Shoot</li>
-                <li><span class="font-semibold text-blue-400">Tab:</span> Show Leaderboard</li>
-            </ul>
-            <button id="closeModalButton"
-                class="mt-4 neon-button bg-gradient-to-r from-red-600 to-pink-600 text-white px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-red-400"
-                aria-label="Close controls modal">
-                Close
-            </button>
-        </div>
-    </div>
-
     <!-- Footer Ad Space -->
     <footer class="bg-gray-900 bg-opacity-80 text-center py-4 border-t border-indigo-700">
         <span class="text-lg text-indigo-400 uppercase tracking-wider">Ad Space Placeholder: 728x90 Footer Banner</span>
@@ -161,28 +179,6 @@
 
     <!-- Scripts -->
     <script>
-        const controlsButton = document.getElementById('controlsButton');
-        const closeModalButton = document.getElementById('closeModalButton');
-        const controlsModal = document.getElementById('controlsModal');
-
-        controlsButton.addEventListener('click', () => {
-            controlsModal.classList.remove('opacity-0', 'invisible');
-            controlsModal.classList.add('opacity-100', 'visible');
-            closeModalButton.focus();
-        });
-
-        closeModalButton.addEventListener('click', () => {
-            controlsModal.classList.remove('opacity-100', 'visible');
-            controlsModal.classList.add('opacity-0', 'invisible');
-        });
-
-        controlsModal.addEventListener('click', (e) => {
-            if (e.target === controlsModal) {
-                controlsModal.classList.remove('opacity-100', 'visible');
-                controlsModal.classList.add('opacity-0', 'invisible');
-            }
-        });
-
         // Starfield Animation
         const canvas = document.getElementById('starfield');
         const context = canvas.getContext('2d');
