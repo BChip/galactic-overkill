@@ -3,7 +3,7 @@ import { Part4Scene } from "./scenes/Part4Scene";
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
     fps: {
-        target: 90,
+        target: 60,
         forceSetTimeOut: true,
         smoothStep: false,
     },
