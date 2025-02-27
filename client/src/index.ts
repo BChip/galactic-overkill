@@ -8,8 +8,8 @@ const config: Phaser.Types.Core.GameConfig = {
         forceSetTimeOut: true,
         smoothStep: false,
     },
-    width: 800,
-    height: 600,
+    width: 1400,
+    height: 700,
     backgroundColor: '#000000',
     parent: 'gameContainer', // Match the div ID in the HTML
     physics: {

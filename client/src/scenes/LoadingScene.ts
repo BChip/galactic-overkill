@@ -24,16 +24,16 @@ export class LoadingScene extends Phaser.Scene {
     }
 
     create() {
-        this.add.image(400, 200, "small_cropped");
+        this.add.image(700, 200, "small_cropped");
 
         // Add instruction text
-        this.add.text(400, 400, 'Enter your username to start the game', {
+        this.add.text(700, 400, 'Enter your username to start the game', {
             fontSize: '24px',
             color: '#ffffff'
         }).setOrigin(0.5);
 
         // Create DOM input for username
-        const usernameInput = this.add.dom(400, 450, 'input', {
+        const usernameInput = this.add.dom(700, 450, 'input', {
             type: 'text',
             placeholder: 'Your username',
             fontSize: '18px',
@@ -43,7 +43,7 @@ export class LoadingScene extends Phaser.Scene {
         });
 
         // Create DOM submit button
-        const submitButton = this.add.dom(400, 500, 'button', {
+        const submitButton = this.add.dom(700, 500, 'button', {
             backgroundColor: '#4CAF50',
             color: 'white',
             padding: '10px 20px',
