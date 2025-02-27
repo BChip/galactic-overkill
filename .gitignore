@@ -1,4 +1,4 @@
 node_modules
 .parcel-cache
-client/dist/*.js
-client/dist/*.map
+client/dist/
+client/dist/

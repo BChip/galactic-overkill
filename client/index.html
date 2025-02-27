@@ -7,13 +7,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Galactic Overkill</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
     <style>
         body {
             width: 100%;
             height: 100vh;
-            background-color: #000;
-            background-image: radial-gradient(circle at top right, rgba(121, 68, 154, 0.13), transparent),
-                radial-gradient(circle at 20% 80%, rgba(41, 196, 255, 0.13), transparent);
+            background-color: #090419;
+            font-family: 'Exo 2', sans-serif;
         }
 
         canvas#starfield {
@@ -22,53 +24,85 @@
             height: 100%;
             z-index: -1;
         }
+
+        .orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .glow {
+            text-shadow: 0 0 10px rgba(66, 220, 255, 0.8),
+                0 0 20px rgba(66, 220, 255, 0.5),
+                0 0 30px rgba(66, 220, 255, 0.3);
+        }
+
+        .neon-button {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .neon-button:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.6s ease;
+        }
+
+        .neon-button:hover:before {
+            left: 100%;
+        }
     </style>
 </head>
 
 <body class="bg-black text-gray-100 font-sans h-screen flex flex-col overflow-hidden">
 
-    <!-- Dynamic Background -->
+    <!-- Dynamic Background - KEEPING ORIGINAL ID -->
     <canvas id="starfield"></canvas>
 
     <!-- Header -->
-    <header class="bg-gray-900 bg-opacity-80 p-4 shadow-md border-b border-gray-700 flex justify-between items-center">
-        <h1 class="text-4xl font-extrabold text-blue-500 tracking-wide uppercase glow">
+    <header
+        class="bg-gray-900 bg-opacity-80 p-4 shadow-md border-b border-indigo-700 flex justify-between items-center">
+        <h1 class="orbitron text-4xl font-extrabold text-blue-500 tracking-wide uppercase glow">
             Galactic Overkill
         </h1>
         <button id="controlsButton"
-            class="bg-red-600 hover:bg-red-500 text-white text-sm px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-red-400">
+            class="neon-button bg-gradient-to-r from-red-600 to-pink-600 text-white text-sm px-4 py-2 rounded shadow-lg focus:outline-none focus:ring-2 focus:ring-red-400">
             View Controls
         </button>
     </header>
 
-    <!-- Ad Space (Hero) -->
-    <div class="bg-gray-900 bg-opacity-80 text-center py-4 border-b border-gray-700">
-        <span class="text-lg text-gray-400 uppercase tracking-wider">Ad Space Placeholder: 970x250 Hero Banner</span>
+    <!-- Ad Space (Hero) - KEEPING ORIGINAL STRUCTURE -->
+    <div class="bg-gray-900 bg-opacity-80 text-center py-4 border-b border-indigo-700">
+        <span class="text-lg text-indigo-400 uppercase tracking-wider">Ad Space Placeholder: 970x250 Hero Banner</span>
     </div>
 
-    <!-- Game Canvas Area -->
+    <!-- Game Canvas Area - KEEPING EXACT ORIGINAL STRUCTURE -->
     <main class="flex-grow flex items-center justify-center relative">
         <div id="gameContainer" class="w-full max-w-4xl p-4">
             <!-- The canvas will dynamically attach here -->
         </div>
 
-        <!-- Ad Space (Side Left) -->
+        <!-- Ad Space (Side Left) - KEEPING ORIGINAL STRUCTURE -->
         <div
-            class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-900 bg-opacity-80 w-40 h-96 flex items-center justify-center border border-gray-700 rounded-lg shadow-md">
-            <span class="text-xs text-gray-400 text-center">Ad Space Placeholder: 160x600 Vertical</span>
+            class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-900 bg-opacity-80 w-40 h-96 flex items-center justify-center border border-indigo-700 rounded-lg shadow-md">
+            <span class="text-xs text-indigo-400 text-center">Ad Space Placeholder: 160x600 Vertical</span>
         </div>
 
-        <!-- Ad Space (Side Right) -->
+        <!-- Ad Space (Side Right) - KEEPING ORIGINAL STRUCTURE -->
         <div
-            class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-900 bg-opacity-80 w-40 h-96 flex items-center justify-center border border-gray-700 rounded-lg shadow-md">
-            <span class="text-xs text-gray-400 text-center">Ad Space Placeholder: 160x600 Vertical</span>
+            class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-900 bg-opacity-80 w-40 h-96 flex items-center justify-center border border-indigo-700 rounded-lg shadow-md">
+            <span class="text-xs text-indigo-400 text-center">Ad Space Placeholder: 160x600 Vertical</span>
         </div>
     </main>
 
-    <!-- Controls Modal -->
+    <!-- Controls Modal - KEEPING ORIGINAL STRUCTURE -->
     <div id="controlsModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center hidden">
-        <div class="bg-gray-900 p-6 rounded-lg shadow-lg w-96 border border-gray-700">
-            <h2 class="text-2xl font-bold text-blue-500 mb-4">Game Controls</h2>
+        <div class="bg-gray-900 p-6 rounded-lg shadow-lg w-96 border border-indigo-700">
+            <h2 class="text-2xl font-bold text-blue-500 mb-4 orbitron">Game Controls</h2>
             <ul class="space-y-3 text-gray-300">
                 <li><span class="font-semibold text-blue-400">W:</span> Move Up</li>
                 <li><span class="font-semibold text-blue-400">A:</span> Move Left</li>
@@ -78,18 +112,18 @@
                 <li><span class="font-semibold text-blue-400">Tab:</span> Show Leaderboard</li>
             </ul>
             <button id="closeModalButton"
-                class="mt-4 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-red-400">
+                class="mt-4 neon-button bg-gradient-to-r from-red-600 to-pink-600 text-white px-4 py-2 rounded shadow focus:outline-none focus:ring-2 focus:ring-red-400">
                 Close
             </button>
         </div>
     </div>
 
-    <!-- Ad Space (Footer) -->
-    <footer class="bg-gray-900 bg-opacity-80 text-center py-4 border-t border-gray-700">
-        <span class="text-lg text-gray-400 uppercase tracking-wider">Ad Space Placeholder: 728x90 Footer Banner</span>
+    <!-- Ad Space (Footer) - KEEPING ORIGINAL STRUCTURE -->
+    <footer class="bg-gray-900 bg-opacity-80 text-center py-4 border-t border-indigo-700">
+        <span class="text-lg text-indigo-400 uppercase tracking-wider">Ad Space Placeholder: 728x90 Footer Banner</span>
     </footer>
 
-    <!-- Scripts -->
+    <!-- Scripts - KEEPING ORIGINAL STRUCTURE -->
     <script>
         const controlsButton = document.getElementById('controlsButton');
         const closeModalButton = document.getElementById('closeModalButton');
@@ -103,7 +137,7 @@
             controlsModal.classList.add('hidden');
         });
 
-        // Starfield Script
+        // Starfield Script - KEEPING ORIGINAL CODE
         const canvas = document.getElementById('starfield');
         const context = canvas.getContext('2d');
         let width, height, centerX, centerY, stars = [];
