@@ -13,6 +13,7 @@ export class Part4Room extends Room<GameState> {
 
   onCreate() {
     this.setState(new GameState());
+    this.setPatchRate(1000 / 60); // Sync at 60Hz
     this.setupMessageHandlers();
     this.setupGameLoop();
     this.spawnInitialPowerUps();
