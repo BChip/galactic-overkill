@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "colyseus.js": "^0.15.9",
+    "parcel-reporter-static-files-copy": "^1.5.3",
     "phaser": "^3.55.2"
   }
 }
