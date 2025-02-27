@@ -9,7 +9,7 @@ interface FloatingText {
     duration: number;
 }
 
-export class Part4Scene extends Phaser.Scene {
+export class MainScene extends Phaser.Scene {
     private room!: Room;
     private player!: Phaser.GameObjects.Triangle;
     private playerEntities: { [sessionId: string]: Phaser.GameObjects.Triangle } = {};
@@ -29,28 +29,151 @@ export class Part4Scene extends Phaser.Scene {
     private leaderboardContainer!: Phaser.GameObjects.Container;
     private leaderboardText!: Phaser.GameObjects.Text;
     private isLeaderboardVisible: boolean = false;
-
-
+    private username: string;
+    private forwardThrusterManager!: Phaser.GameObjects.Particles.ParticleEmitterManager;
+    private playerPrevPositions: { [sessionId: string]: { x: number, y: number } } = {};
 
     constructor() {
-        super({ key: "GameScene" });
+        super({ key: "MainScene" });
+    }
+
+    init(data: { username: string }) {
+        this.username = data.username;
+        console.log('Player username:', this.username);
     }
 
     preload() {
-        this.createBulletHitTexture();
-        this.load.audio('background-music', 'assets/music.ogg');
-        this.load.audio('shoot-sound', 'assets/shoot.ogg');
-        this.load.audio('powerup-sound', 'assets/powerup.ogg');
-        this.load.audio('explosion-sound', 'assets/explosion.ogg');
+
     }
 
-    createBulletHitTexture() {
-        // Create a particle texture
-        const graphics = this.add.graphics();
-        graphics.fillStyle(0xff6600, 1); // Orange color
-        graphics.fillRect(0, 0, 4, 4);
-        graphics.generateTexture('particle', 4, 4);
-        graphics.destroy();
+    createThrusterEffect() {
+        // Create standard thruster effect
+        this.particleManagers['thruster'] = this.add.particles(0, 0, 'particle', {
+            speed: { min: 50, max: 100 },
+            angle: { min: 140, max: 300 }, // Wide angle range
+            scale: { start: 1.0, end: 0 },
+            lifespan: { min: 150, max: 250 },
+            blendMode: 'ADD',
+            tint: [0xffdd00, 0xff9900, 0xff6600], // More yellowish flame
+            gravityY: 0,
+            frequency: -1, // Manual emit only
+            reserve: 40 // Particle pool size
+        });
+
+        // Create forward thruster with more intense effect
+        this.forwardThrusterManager = this.add.particles(0, 0, 'particle', {
+            speed: { min: 50, max: 100 },
+            angle: { min: 140, max: 300 }, // Wide angle range
+            scale: { start: 1.0, end: 0 },
+            lifespan: { min: 150, max: 250 },
+            blendMode: 'ADD',
+            tint: [0xffdd00, 0xff9900, 0xff6600], // More yellowish flame
+            gravityY: 0,
+            frequency: -1, // Manual emit only
+            reserve: 40 // Particle pool size
+        });
+
+        // Add both particle managers to world container
+        this.worldContainer.add(this.particleManagers['thruster']);
+        this.worldContainer.add(this.forwardThrusterManager);
+    }
+
+    updateAllPlayerThrusters() {
+        if (!this.room || !this.particleManagers['thruster'] || !this.forwardThrusterManager) return;
+
+        // Update thruster for local player
+        this.updateLocalPlayerThruster();
+
+        // Update thrusters for other players
+        this.updateRemotePlayerThrusters();
+    }
+
+    updateLocalPlayerThruster() {
+        if (!this.player) return;
+
+        // Get player position and rotation
+        const { x, y, rotation } = this.player;
+
+        // Calculate thruster position at the base center of the triangle
+        const rearOffset = 0;
+        const thrusterX = x - Math.cos(rotation) * rearOffset;
+        const thrusterY = y - Math.sin(rotation) * rearOffset;
+
+        // Check if player is moving
+        const isMoving = this.keys.up.isDown || this.keys.down.isDown ||
+            this.keys.left.isDown || this.keys.right.isDown;
+
+        // Emit particles if moving
+        if (isMoving) {
+            if (this.keys.up.isDown) {
+                // Forward movement - more intense particles
+                this.forwardThrusterManager.emitParticleAt(
+                    thrusterX,
+                    thrusterY,
+                    3 // Emit 3 particles
+                );
+            }
+        }
+
+        // Store current position for next frame
+        this.playerPrevPositions[this.room.sessionId] = { x, y };
+    }
+
+    updateRemotePlayerThrusters() {
+        this.room.state.players.forEach((player, sessionId) => {
+            // Skip local player (already handled)
+            if (sessionId === this.room.sessionId) return;
+
+            const entity = this.playerEntities[sessionId];
+            if (!entity || !entity.active) return;
+
+            const { x, y, rotation } = entity;
+
+            // Calculate thruster position
+            const rearOffset = 0;
+            const thrusterX = x - Math.cos(rotation) * rearOffset;
+            const thrusterY = y - Math.sin(rotation) * rearOffset;
+
+            // Check if this player is moving by comparing current to previous position
+            const prevPos = this.playerPrevPositions[sessionId] || { x, y };
+            const dx = x - prevPos.x;
+            const dy = y - prevPos.y;
+            const distanceMoved = Math.sqrt(dx * dx + dy * dy);
+
+            // Only show thruster if player has moved enough
+            const isMoving = distanceMoved > 3;
+
+            if (isMoving) {
+                // Determine if player is moving forward
+                // Calculate dot product between movement and facing direction
+                const moveAngle = Math.atan2(dy, dx);
+                const facingVector = { x: Math.cos(rotation), y: Math.sin(rotation) };
+                const moveVector = { x: Math.cos(moveAngle), y: Math.sin(moveAngle) };
+                const dotProduct = facingVector.x * moveVector.x + facingVector.y * moveVector.y;
+
+                // Forward movement if dot product is positive (vectors pointing in similar direction)
+                const isForward = dotProduct > 3;
+
+                if (isForward) {
+                    // Forward movement - more intense particles
+                    this.forwardThrusterManager.emitParticleAt(
+                        thrusterX,
+                        thrusterY,
+                        6 // Fewer particles for remote players (network optimization)
+                    );
+                } else {
+                    // Other movement - standard thruster
+                    this.particleManagers['thruster'].emitParticleAt(
+                        thrusterX,
+                        thrusterY,
+                        6
+                    );
+                }
+            }
+
+            // Store current position for next frame
+            this.playerPrevPositions[sessionId] = { x, y };
+        });
     }
 
     setupPowerUpNotifications() {
@@ -145,6 +268,8 @@ export class Part4Scene extends Phaser.Scene {
         this.starfieldManager = new StarfieldManager(this, 2000, 2000);
         this.starfieldManager.getLayers().forEach(layer => this.worldContainer.add(layer));
 
+        this.createThrusterEffect();
+
         // Setup input
         this.keys = this.input.keyboard.addKeys({
             up: Phaser.Input.Keyboard.KeyCodes.W,
@@ -216,7 +341,7 @@ export class Part4Scene extends Phaser.Scene {
         console.log(BACKEND_URL)
         const client = new Client(BACKEND_URL);
         try {
-            this.room = await client.joinOrCreate<GameState>("game");
+            this.room = await client.joinOrCreate<GameState>("game", { "username": this.username });
             this.setupRoomHandlers();
         } catch (e) {
             console.error("Join error:", e);
@@ -245,7 +370,7 @@ export class Part4Scene extends Phaser.Scene {
 
         players.forEach((player: Player, index) => {
             const rank = index + 1;
-            leaderboardText += `${rank}. ${player.sessionId}${player.sessionId === this.room.sessionId ? "(YOU)" : ""} - Kills: ${player.kills}\n`;
+            leaderboardText += `${rank}. ${player.userName} - Kills: ${player.kills}\n`;
         });
 
         this.leaderboardText.setText(leaderboardText);
@@ -463,6 +588,8 @@ export class Part4Scene extends Phaser.Scene {
         };
 
         this.room.send(0, input);
+
+        this.updateAllPlayerThrusters();
 
         const velocity = {
             x: (this.keys.left.isDown ? -1 : 0) + (this.keys.right.isDown ? 1 : 0),

@@ -1,4 +1,5 @@
-import { Part4Scene } from "./scenes/Part4Scene";
+import { MainScene } from "./scenes/MainScene";
+import { LoadingScene } from "./scenes/LoadingScene"
 
 const config: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -18,8 +19,11 @@ const config: Phaser.Types.Core.GameConfig = {
             debug: false
         }
     },
+    dom: {
+        createContainer: true // Enables DOM elements in scenes
+    },
     pixelArt: true,
-    scene: [Part4Scene],
+    scene: [LoadingScene, MainScene],
 };
 
 const game = new Phaser.Game(config);

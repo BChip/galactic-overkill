@@ -41,6 +41,7 @@ export class Player extends Schema {
   @type("number") tick: number;
   @type("string") color: string;
   @type("string") sessionId: string;
+  @type("string") userName: string;
 
   inputQueue: InputData[] = [];
 }

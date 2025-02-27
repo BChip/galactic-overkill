@@ -260,14 +260,16 @@ export class Part4Room extends Room<GameState> {
     return distance < 15; // Collision radius
   }
 
-  onJoin(client: Client) {
+  onJoin(client: Client, options: any) {
+    const { username } = options
     const player = new Player();
     player.x = Math.random() * this.state.mapWidth;
     player.y = Math.random() * this.state.mapHeight;
+    player.userName = username;
     player.color = this.COLORS[Math.floor(Math.random() * this.COLORS.length)];
     player.sessionId = client.sessionId;
     this.state.players.set(client.sessionId, player);
-    console.log(`Player ${player.sessionId} has joined!`)
+    console.log(`Player ${player.userName} has joined!`)
   }
 
   onLeave(client: Client) {
