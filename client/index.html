@@ -89,6 +89,140 @@
             align-items: center;
             gap: 0.25rem;
         }
+
+        .kbve-ad {
+            width: 160px;
+            height: 600px;
+            background: linear-gradient(180deg, #1a0b47 0%, #090419 100%);
+            padding: 1rem;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .kbve-ad-button:hover {
+            transform: scale(1.05);
+        }
+
+        .kbve-ad-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: #42dcff;
+            text-shadow: 0 0 8px rgba(66, 220, 255, 0.6);
+            text-align: center;
+        }
+
+        .kbve-ad-text {
+            color: #fff;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .kbve-ad-button {
+            background-color: #ff8800;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        /* New SoundCloud Ad Styles */
+        .soundcloud-ad {
+            width: 728px;
+            height: 90px;
+            background: linear-gradient(90deg, #1a0b47 0%, #090419 100%);
+            padding: 1rem;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+            margin: 0 auto;
+        }
+
+        .soundcloud-ad-button:hover {
+            transform: scale(1.03);
+        }
+
+        .soundcloud-ad-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            color: #ff3333;
+            text-shadow: 0 0 8px rgba(255, 51, 51, 0.6);
+        }
+
+        .soundcloud-ad-text {
+            color: #fff;
+            font-size: 0.9rem;
+            max-width: 400px;
+        }
+
+        .soundcloud-ad-button {
+            background-color: #33ff33;
+            color: #000;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: transform 0.3s ease;
+        }
+
+        .wow-addons-ad {
+            width: 160px;
+            height: 600px;
+            background: linear-gradient(180deg, #090419 0%, #1a0b47 100%);
+            padding: 1rem;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+
+        .wow-addons-ad-button:hover {
+            transform: scale(1.05);
+        }
+
+        .wow-addons-ad-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            color: #ff8800;
+            text-shadow: 0 0 8px rgba(255, 136, 0, 0.6);
+            text-align: center;
+        }
+
+        .wow-addons-ad-subtitle {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: #42dcff;
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .wow-addons-ad-text {
+            color: #fff;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .wow-addons-ad-button {
+            background-color: #42dcff;
+            color: #000;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: transform 0.3s ease;
+        }
     </style>
 </head>
 
@@ -148,10 +282,7 @@
         </div>
     </header>
 
-    <!-- Top Ad Space -->
-    <div class="bg-gray-900 bg-opacity-80 text-center py-4 border-b border-indigo-700">
-        <span class="text-lg text-indigo-400 uppercase tracking-wider">Ad Space Placeholder: 970x250 Hero Banner</span>
-    </div>
+
 
     <!-- Game Area -->
     <main class="flex-grow flex items-center justify-center relative">
@@ -159,22 +290,46 @@
             <!-- Phaser canvas attaches here -->
         </div>
 
-        <!-- Left Side Ad -->
-        <div
-            class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-900 bg-opacity-80 w-40 h-96 flex items-center justify-center border border-indigo-700 rounded-lg shadow-md">
-            <span class="text-xs text-indigo-400 text-center">Ad Space Placeholder: 160x600 Vertical</span>
+        <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
+            <a href="https://webenclave.com/" target="_blank"
+                class="wow-addons-ad border border-indigo-700 rounded-lg shadow-md">
+                <div>
+                    <h3 class="wow-addons-ad-title">Web Enclave</h3>
+                    <p class="wow-addons-ad-text">Explore the diverse range of apps and projects I’ve worked on, from
+                        games to AI applications, World of Warcraft addons, and much more. Each project reflects my
+                        passion for creating innovative solutions that are both fun and functional.<br>
+                    </p>
+                </div>
+                <div class="wow-addons-ad-button">Visit Web Enclave</div>
+            </a>
         </div>
 
-        <!-- Right Side Ad -->
-        <div
-            class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-900 bg-opacity-80 w-40 h-96 flex items-center justify-center border border-indigo-700 rounded-lg shadow-md">
-            <span class="text-xs text-indigo-400 text-center">Ad Space Placeholder: 160x600 Vertical</span>
+        <!-- Right Side Ad (KBVE Ad) -->
+        <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
+            <a href="https://kbve.com/" target="_blank" class="kbve-ad border border-indigo-700 rounded-lg shadow-md">
+                <div>
+                    <h3 class="kbve-ad-title">Join KBVE</h3>
+                    <p class="kbve-ad-text">Join Our Tech & Gaming Community!
+                        From cloud-native development to competitive gaming, we're here to help you level up! Whether
+                        you're containerizing apps or climbing ranked, our community's got your back.
+                    </p>
+                </div>
+                <div class="kbve-ad-button">Visit KBVE Now</div>
+            </a>
         </div>
     </main>
 
     <!-- Footer Ad Space -->
     <footer class="bg-gray-900 bg-opacity-80 text-center py-4 border-t border-indigo-700">
-        <span class="text-lg text-indigo-400 uppercase tracking-wider">Ad Space Placeholder: 728x90 Footer Banner</span>
+        <a href="https://soundcloud.com/djbigchip" target="_blank"
+            class="soundcloud-ad border border-indigo-700 rounded-lg shadow-md">
+            <div>
+                <h3 class="soundcloud-ad-title">DJBigChip on SoundCloud</h3>
+                <p class="soundcloud-ad-text">Producing beats for club life. Tracks for those who live for the dance
+                    floor.</p>
+            </div>
+            <div class="soundcloud-ad-button">Listen Now</div>
+        </a>
     </footer>
 
     <!-- Scripts -->
